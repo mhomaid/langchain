@@ -1,13 +1,14 @@
 import os
 
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import WebBaseLoader
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnableParallel, RunnablePassthrough
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Weaviate
+from langchain_community.chat_models import ChatOpenAI
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Weaviate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.pydantic_v1 import BaseModel
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 if os.environ.get("WEAVIATE_API_KEY", None) is None:
     raise Exception("Missing `WEAVIATE_API_KEY` environment variable.")
@@ -27,10 +28,10 @@ text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
 all_splits = text_splitter.split_documents(data)
 
 # # Add to vectorDB
-vectorstore = Weaviate.from_documents(
-    documents=all_splits, embedding=OpenAIEmbeddings(), index_name=WEAVIATE_INDEX_NAME
-)
-retriever = vectorstore.as_retriever()
+# vectorstore = Weaviate.from_documents(
+#     documents=all_splits, embedding=OpenAIEmbeddings(), index_name=WEAVIATE_INDEX_NAME
+# )
+# retriever = vectorstore.as_retriever()
 
 vectorstore = Weaviate.from_existing_index(WEAVIATE_INDEX_NAME, OpenAIEmbeddings())
 retriever = vectorstore.as_retriever()
@@ -50,3 +51,11 @@ chain = (
     | model
     | StrOutputParser()
 )
+
+
+# Add typing for input
+class Question(BaseModel):
+    __root__: str
+
+
+chain = chain.with_types(input_type=Question)

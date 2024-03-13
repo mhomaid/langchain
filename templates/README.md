@@ -1,20 +1,23 @@
-# LangServe Templates
+# LangChain Templates
 
-LangServe Templates are the easiest and fastest way to build a production-ready LLM application.
+LangChain Templates are the easiest and fastest way to build a production-ready LLM application.
 These templates serve as a set of reference architectures for a wide variety of popular LLM use cases.
+They are all in a standard format which make it easy to deploy them with [LangServe](https://github.com/langchain-ai/langserve).
+
+🚩 We will be releasing a hosted version of LangServe for one-click deployments of LangChain applications. [Sign up here](https://airtable.com/app0hN6sd93QcKubv/shrAjst60xXa6quV2) to get on the waitlist.
 
 ## Quick Start
 
 To use, first install the LangChain CLI.
 
 ```shell
-pip install -U "langchain-cli[serve]"
+pip install -U langchain-cli
 ```
 
 Next, create a new LangChain project:
 
 ```shell
-langchain serve new my-app
+langchain app new my-app
 ```
 
 This will create a new directory called `my-app` with two folders:
@@ -33,7 +36,7 @@ In this getting started guide, we will add a simple `pirate-speak` project.
 All this project does is convert user input into pirate speak.
 
 ```shell
-langchain serve add pirate-speak
+langchain app add pirate-speak
 ```
 
 This will pull in the specified template into `packages/pirate-speak`
@@ -50,11 +53,11 @@ If we accept, we will see the following code generated:
 ```shell
 from pirate_speak.chain import chain as pirate_speak_chain
 
-add_routes(app, pirate_speak_chain, path="/pirate_speak")
+add_routes(app, pirate_speak_chain, path="/pirate-speak")
 ```
 
 You can now edit the template you pulled down.
-You can change the code files in `package/pirate-speak` to use a different model, different prompt, different logic.
+You can change the code files in `packages/pirate-speak` to use a different model, different prompt, different logic.
 Note that the above code snippet always expects the final chain to be importable as `from pirate_speak.chain import chain`,
 so you should either keep the structure of the package similar enough to respect that or be prepared to update that code snippet.
 
@@ -69,30 +72,48 @@ from pirate_speak.chain import chain as pirate_speak_chain
 
 app = FastAPI()
 
-add_routes(app, pirate_speak_chain, path="/pirate_speak")
+add_routes(app, pirate_speak_chain, path="/pirate-speak")
+```
+
+(Optional) Let's now configure LangSmith. 
+LangSmith will help us trace, monitor and debug LangChain applications. 
+LangSmith is currently in private beta, you can sign up [here](https://smith.langchain.com/). 
+If you don't have access, you can skip this section
+
+
+```shell
+export LANGCHAIN_TRACING_V2=true
+export LANGCHAIN_API_KEY=<your-api-key>
+export LANGCHAIN_PROJECT=<your-project>  # if not specified, defaults to "default"
+```
+
+For this particular application, we will use OpenAI as the LLM, so we need to export our OpenAI API key:
+
+```shell
+export OPENAI_API_KEY=sk-...
 ```
 
 You can then spin up production-ready endpoints, along with a playground, by running:
 
 ```shell
-langchain start
+langchain serve
 ```
 
 This now gives a fully deployed LangServe application.
-For example, you get a playground out-of-the-box at [http://127.0.0.1:8000/pirate_speak/playground/](http://127.0.0.1:8000/pirate_speak/playground/):
+For example, you get a playground out-of-the-box at [http://127.0.0.1:8000/pirate-speak/playground/](http://127.0.0.1:8000/pirate-speak/playground/):
 
-![playground.png](docs/playground.png)
+![Screenshot of the LangServe Playground interface with input and output fields demonstrating pirate speak conversion.](docs/playground.png "LangServe Playground Interface")
 
 Access API documentation at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-![docs.png](docs/docs.png)
+![Screenshot of the API documentation interface showing available endpoints for the pirate-speak application.](docs/docs.png "API Documentation Interface")
 
 Use the LangServe python or js SDK to interact with the API as if it were a regular [Runnable](https://python.langchain.com/docs/expression_language/).
 
 ```python
 from langserve import RemoteRunnable
 
-api = RemoteRunnable("http://127.0.0.1:8000/pirate_speak")
+api = RemoteRunnable("http://127.0.0.1:8000/pirate-speak")
 api.invoke({"text": "hi"})
 ```
 

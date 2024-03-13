@@ -11,14 +11,14 @@ Set up an appropriate dev environment, and make sure you are in this `templates`
 Make sure you have `langchain-cli` installed.
 
 ```shell
-pip install -U "langchain-cli[serve]"
+pip install -U langchain-cli
 ```
 
 You can then run the following command to create a new skeleton of a package.
-By convention, package names should use `-` delimeters (not `_`).
+By convention, package names should use `-` delimiters (not `_`).
 
 ```shell
-langchain hub new $PROJECT_NAME
+langchain template new $PROJECT_NAME
 ```
 
 You can then edit the contents of the package as you desire.
