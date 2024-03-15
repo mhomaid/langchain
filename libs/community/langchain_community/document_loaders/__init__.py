@@ -100,6 +100,7 @@ _module_lookup = {
     "IuguLoader": "langchain_community.document_loaders.iugu",
     "JSONLoader": "langchain_community.document_loaders.json_loader",
     "JoplinLoader": "langchain_community.document_loaders.joplin",
+    "KafkaDocumentLoader": "langchain_community.document_loaders.kafka",
     "LakeFSLoader": "langchain_community.document_loaders.lakefs",
     "LarkSuiteDocLoader": "langchain_community.document_loaders.larksuite",
     "MHTMLLoader": "langchain_community.document_loaders.mhtml",
