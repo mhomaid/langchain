@@ -1,10 +1,9 @@
 from typing import Any, Callable, Iterator, Mapping, Optional
 from langchain_core.documents import Document
-from confluent_kafka import Consumer, KafkaException, KafkaError
+from confluent_kafka import Consumer
 from langchain_community.document_loaders.base import BaseLoader
 
 RecordHandler = Callable[[Any, Optional[str]], Document]
-
 
 class KafkaDocumentLoader(BaseLoader):
     def __init__(
@@ -36,19 +35,20 @@ class KafkaDocumentLoader(BaseLoader):
     def _handle_record(self, record: Any, id: Optional[str]) -> Document:
         if self.record_handler:
             return self.record_handler(record, id)
-        return Document(page_content=record.value().decode('utf-8'), metadata={'offset': record.offset(), 'timestamp': record.timestamp()})
+        return Document(page_content=record.value().decode('utf-8'))
 
     def lazy_load(self) -> Iterator[Document]:
         if not self.consumer:
             self._create_consumer()
-
         while True:
             msg = self.consumer.poll(1.0)
             if msg is None:
-                continue
+                break  # Break the loop if there are no more messages
             if msg.error():
                 raise Exception(f"Consumer error: {msg.error()}")
-            yield self._handle_record(msg, str(msg.offset()))
+            document = self._handle_record(msg, str(msg.offset()))
+            print('doc: ', document)
+            yield document
 
     def load(self) -> list[Document]:
         return list(self.lazy_load())
