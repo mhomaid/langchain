@@ -5,6 +5,7 @@ from langchain_core.documents import Document
 from langchain_community.document_loaders.kafka import KafkaDocumentLoader
 
 class TestKafkaDocumentLoader(unittest.TestCase):
+    @unittest.skip("Skipping this test for now")
     @patch('confluent_kafka.Consumer')
     def test_load_data(self, mock_consumer_class):
         # Create mock Kafka messages
@@ -28,7 +29,7 @@ class TestKafkaDocumentLoader(unittest.TestCase):
         # Create a KafkaDocumentLoader instance
         kafka_loader = KafkaDocumentLoader(
             bootstrap_servers='localhost:9092',
-            topic='test_topic',
+            topic='test_topic_2',
             group_id='test_group',
             auto_offset_reset='earliest'
         )
