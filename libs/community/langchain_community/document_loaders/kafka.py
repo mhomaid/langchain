@@ -1,7 +1,12 @@
 from typing import Any, Callable, Iterator, Mapping, Optional
 from langchain_core.documents import Document
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, KafkaException, KafkaError
 from langchain_community.document_loaders.base import BaseLoader
+
+def error_cb(err):
+    print("Client error: {}".format(err))
+    if err.code() == KafkaError._ALL_BROKERS_DOWN or err.code() == KafkaError._AUTHENTICATION:
+        raise KafkaException(err)
 
 class KafkaDocumentLoader(BaseLoader):
     def __init__(
@@ -10,18 +15,37 @@ class KafkaDocumentLoader(BaseLoader):
         topic: str,
         group_id: str,
         auto_offset_reset: str = 'latest',
+        security_protocol: Optional[str] = None,
+        sasl_mechanism: Optional[str] = None,
+        sasl_username: Optional[str] = None,
+        sasl_password: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         self.bootstrap_servers = bootstrap_servers
         self.topic = topic
         self.group_id = group_id
         self.auto_offset_reset = auto_offset_reset
+        self.security_protocol = security_protocol
+        self.sasl_mechanism = sasl_mechanism
+        self.sasl_username = sasl_username
+        self.sasl_password = sasl_password
+
         self.consumer_config = {
             'bootstrap.servers': self.bootstrap_servers,
             'group.id': self.group_id,
             'auto.offset.reset': self.auto_offset_reset,
+            'error_cb': error_cb,
             **kwargs,
         }
+
+        if self.security_protocol:
+            self.consumer_config['security.protocol'] = self.security_protocol
+
+        if self.sasl_mechanism:
+            self.consumer_config['sasl.mechanism'] = self.sasl_mechanism
+            self.consumer_config['sasl.username'] = self.sasl_username
+            self.consumer_config['sasl.password'] = self.sasl_password
+
         self.consumer = None
 
     def _create_consumer(self):
@@ -39,7 +63,11 @@ class KafkaDocumentLoader(BaseLoader):
             if msg is None:
                 break
             if msg.error():
-                raise Exception(f"Consumer error: {msg.error()}")
+                if msg.error().code() == KafkaError._ALL_BROKERS_DOWN or msg.error().code() == KafkaError._AUTHENTICATION:
+                    raise KafkaException(msg.error())
+                else:
+                    print(f"Consumer error: {msg.error()}")
+                    continue
             document = self._handle_record(msg, str(msg.offset()))
             yield document
 
