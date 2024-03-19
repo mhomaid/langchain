@@ -1,4 +1,4 @@
-from typing import Any, Callable, Iterator, Mapping, Optional
+from typing import Any, Callable, Iterator, Mapping, Optional, List
 from langchain_core.documents import Document
 from confluent_kafka import Consumer, KafkaException, KafkaError
 from langchain_community.document_loaders.base import BaseLoader
@@ -12,7 +12,7 @@ class KafkaDocumentLoader(BaseLoader):
     def __init__(
         self,
         bootstrap_servers: str,
-        topic: str,
+        topics: List[str],
         group_id: str,
         auto_offset_reset: str = 'latest',
         security_protocol: Optional[str] = None,
@@ -22,7 +22,7 @@ class KafkaDocumentLoader(BaseLoader):
         **kwargs: Any,
     ) -> None:
         self.bootstrap_servers = bootstrap_servers
-        self.topic = topic
+        self.topics = topics
         self.group_id = group_id
         self.auto_offset_reset = auto_offset_reset
         self.security_protocol = security_protocol
@@ -50,7 +50,7 @@ class KafkaDocumentLoader(BaseLoader):
 
     def _create_consumer(self):
         self.consumer = Consumer(self.consumer_config)
-        self.consumer.subscribe([self.topic])
+        self.consumer.subscribe(self.topics)
 
     def _handle_record(self, record: Any, id: Optional[str]) -> Document:
         return Document(page_content=record.value().decode('utf-8'))
